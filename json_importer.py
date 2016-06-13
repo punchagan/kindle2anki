@@ -19,7 +19,7 @@ from anki.lang import _
 from anki.importing.noteimp import NoteImporter, ForeignNote
 from aqt import editor, mw
 from aqt.qt import QAction, SIGNAL
-from aqt.utils import getFile
+from aqt.utils import getFile, showText
 
 
 MODEL_NAME = 'Basic-Import'
@@ -59,10 +59,10 @@ class JsonImporter(NoteImporter):
         row = []
         empty = True
         for f in self.mappingFields:
-            value = entry.get(f)
-            if not value:
-                continue
-            empty = False
+            value = entry.get(f, '')
+            if value:
+                empty = False
+
             if '.' in value:
                 ext = value[value.rfind('.') + 1:].lower()
                 if ext in MEDIA_EXTENSIONS:
@@ -106,12 +106,18 @@ def import_from_json():
     entries = sorted(entries, key=get_deck)
 
     mw.checkpoint(_("Import"))
+    logs = []
     for deck_name, entries in itertools.groupby(entries, get_deck):
         # FIXME: If required we could group by model name also!
         importer = JsonImporter(mw.col, path, MODEL_NAME, deck_name)
         importer.initMapping()
         importer.run(list(entries))
+        if importer.log:
+            logs.append('\n'.join(importer.log))
 
+    txt = _("Importing complete.") + "\n"
+    txt += '\n'.join(logs)
+    showText(txt)
     mw.reset()
 
 
