@@ -93,8 +93,9 @@
    (-> (get highlight "source") (parse-source) (.get "title"))
    [highlight highlights]))
 
-(defn add-deck-name [highlight]
+(defn ankify-highlight [highlight]
   (let [[source (get highlight "source")]
+        [text (get highlight "text")]
         [info (parse-source source)]
         [title (get info "title")]
         [deck (.get book-deck-map title)]]
@@ -102,28 +103,37 @@
       None
       (do
        (assoc highlight "deck" deck)
+       (assoc highlight "Original Text" text)
+       (assoc highlight "Front" text)
+       (assoc highlight "Source" source)
        (.update highlight info)
        highlight))))
 
 (defn filtered-highlights [highlights]
-  (def -highlights (list-comp (add-deck-name x) [x highlights]))
+  (def -highlights (list-comp (ankify-highlight x) [x highlights]))
   (list (filter None -highlights)))
 
-(defn write-anki-json [highlights path]
-  (def highlights- (filtered-highlights highlights))
-  (def missing-titles (- (book-list highlights) (book-list highlights-)))
-  (with
-   [[f (open path "w")]]
-   (json.dump highlights- f :indent 2))
-  (print (.format "Wrote {}" path))
+(defn show-missing-titles [highlights highlights-]
+  (def missing-titles
+    (- (book-list highlights) (book-list highlights-)))
   (print "Ignored titles:")
   (for [title missing-titles]
     (print (.format "  {}" title))))
 
-;; Main
+(defn write-anki-json [highlights path]
+  (def highlights- (filtered-highlights highlights))
+  (with
+   [[f (open path "w")]]
+   (json.dump highlights- f :indent 2))
+  (print (.format "Wrote {}" path))
+  (show-missing-titles highlights highlights-))
 
-(when (= __name__ "__main__")
-  (def clippings-file "/tmp/My Clippings.txt")
+
+;; Main
+(defmain [&rest args]
+  (def clippings-file
+    (if (-> (len args) (> 1))
+      (nth args 1)
+      "/tmp/My Clippings.txt"))
   (def *h* (parse-highlights clippings-file))
-  (print (add-deck-name (first *h*)))
   (write-anki-json *h* "anki.json"))
