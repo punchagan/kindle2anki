@@ -104,7 +104,7 @@
       (do
        (assoc highlight "deck" deck)
        (assoc highlight "Original Text" text)
-       (assoc highlight "Front" text)
+       (assoc highlight "Text" text)
        (assoc highlight "Source" source)
        (.update highlight info)
        highlight))))

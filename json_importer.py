@@ -22,7 +22,7 @@ from aqt.qt import QAction, SIGNAL
 from aqt.utils import getFile, showText
 
 
-MODEL_NAME = 'Basic-Import'
+MODEL_NAME = 'Cloze-Import'
 AUDIO_EXTENSIONS = editor.audio
 IMAGE_EXTENSIONS = editor.pics
 MEDIA_EXTENSIONS = editor.audio + editor.pics
