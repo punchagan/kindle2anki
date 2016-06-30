@@ -1,4 +1,13 @@
 #!/usr/bin/env hy
+(def *usage*  "Kindle 2 Anki Import
+
+Usage:
+  parse_clippings.hy summary [--clippings=FILE ] BOOK
+  parse_clippings.hy [--clippings=FILE ]
+
+Options:
+  --clippings=FILE  Path to clippings file [default: /tmp/My Clippings.txt]
+")
 
 (import json)
 (import re)
@@ -89,9 +98,10 @@
     info))
 
 (defn book-list [highlights]
-  (set-comp
-   (-> (get highlight "source") (parse-source) (.get "title"))
-   [highlight highlights]))
+  (set-comp (get-title highlight) [highlight highlights]))
+
+(defn get-title [highlight]
+  (-> (get highlight "source") (parse-source) (.get "title")))
 
 (defn ankify-highlight [highlight]
   (let [[source (get highlight "source")]
@@ -120,6 +130,22 @@
   (for [title missing-titles]
     (print (.format "  {}" title))))
 
+(defn format-notes [highlights title]
+  (let [[parsed-highlights []]
+        sorted-highlights]
+    (for [highlight highlights]
+      (let [[source (parse-source (get highlight "source"))]]
+        (when (= title (get source "title"))
+          (.update highlight source)
+          (.append parsed-highlights highlight))))
+    (def sorted-highlights
+      (sorted parsed-highlights
+              :key (fn [x] (-> (get x "location") (.split "-") (get 0) (int)))))
+    (for [h sorted-highlights]
+      (let [[text (get h "text")]]
+        (when text
+          (print text))))))
+
 (defn write-anki-json [highlights path]
   (def highlights- (filtered-highlights highlights))
   (with
@@ -128,9 +154,23 @@
   (print (.format "Wrote {}" path))
   (show-missing-titles highlights highlights-))
 
+(defn write-summary [highlights book]
+  (let [[book-names (book-list highlights)]]
+    (if (in book book-names)
+      (do
+       (print (.format "Generating summary for {}" book))
+       (format-notes highlights book))
+      (print (.format "Choose one of:\n    {}"
+                      (.join "\n    " (sorted book-names)))))))
 
 ;; Main
 (defmain [&rest args]
-  (def clippings-file
-    (if (-> (len args) (> 1)) (nth args 1) "/tmp/My Clippings.txt"))
-  (write-anki-json (parse-highlights clippings-file) "anki.json"))
+  (import docopt)
+  (let [[arguments (docopt.docopt  *usage*)]
+        [clippings-file (get arguments "--clippings")]
+        [summary (get arguments "summary")]
+        [*book* (get arguments "BOOK")]
+        [highlights (parse-highlights clippings-file)]]
+    (if summary
+      (write-summary highlights *book*)
+      (write-anki-json highlights "anki.json"))))
