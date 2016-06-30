@@ -132,8 +132,5 @@
 ;; Main
 (defmain [&rest args]
   (def clippings-file
-    (if (-> (len args) (> 1))
-      (nth args 1)
-      "/tmp/My Clippings.txt"))
-  (def *h* (parse-highlights clippings-file))
-  (write-anki-json *h* "anki.json"))
+    (if (-> (len args) (> 1)) (nth args 1) "/tmp/My Clippings.txt"))
+  (write-anki-json (parse-highlights clippings-file) "anki.json"))
