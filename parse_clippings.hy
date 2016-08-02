@@ -6,7 +6,7 @@ Usage:
   parse_clippings.hy [--clippings=FILE ]
 
 Options:
-  --clippings=FILE  Path to clippings file [default: /tmp/My Clippings.txt]
+  --clippings=FILE  Path to clippings file [default: My Clippings.txt]
 ")
 
 (import json)
