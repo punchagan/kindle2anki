@@ -11,6 +11,7 @@ Options:
 
 (import json)
 (import re)
+(import textwrap)
 
 (import [book-deck-map [book-deck-map]])
 
@@ -144,7 +145,7 @@ Options:
     (for [h sorted-highlights]
       (let [[text (get h "text")]]
         (when text
-          (print text))))))
+          (print (->> (textwrap.wrap text) (.join "\n") (.format "{0}\n"))))))))
 
 (defn write-anki-json [highlights path]
   (def highlights- (filtered-highlights highlights))
@@ -159,6 +160,7 @@ Options:
     (if (in book book-names)
       (do
        (print (.format "Generating summary for {}" book))
+       (print (.format  "{0}\n" (* "-" 72)))
        (format-notes highlights book))
       (print (.format "Choose one of:\n    {}"
                       (.join "\n    " (sorted book-names)))))))
